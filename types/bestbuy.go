@@ -53,14 +53,21 @@ func (b *BestBuy) Purchase() chromedp.ActionFunc {
 			return err
 		}
 
-		err = chromedp.Evaluate(fmt.Sprintf(`
-		let checkoutbtn = document.querySelector(%v)
-		checkoutbtn[0].click()
-		`, b.CheckoutBtn), nil, chromedp.EvalWithCommandLineAPI).Do(ctx)
+		err = chromedp.Evaluate(fmt.Sprintf("let checkoutbtn = document.querySelectorAll(`%v`) \ncheckoutbtn[0].click()\n", b.CheckoutBtn), nil, chromedp.EvalWithCommandLineAPI).Do(ctx)
 		if err != nil {
 			return err
 		}
 
+
+		err = chromedp.WaitReady(`.c-button.c-button-secondary.c-button-lg.cia-guest-content__continue.guest`, chromedp.ByQueryAll).Do(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = chromedp.Click(`.c-button.c-button-secondary.c-button-lg.cia-guest-content__continue.guest`, chromedp.ByQueryAll).Do(ctx)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 }
@@ -166,6 +173,8 @@ func (b *BestBuy) AddToCart() chromedp.ActionFunc {
 					if (typeof(newCart) === "undefined") {
 						let newCart = document.querySelectorAll("div[data-testid=cart-count]")[0]
 						newCart.innerText
+					} else {
+						newCart.innerText
 					}`, &items, chromedp.EvalWithCommandLineAPI).Do(ctx)
 				if err != nil {
 					return err
@@ -174,15 +183,17 @@ func (b *BestBuy) AddToCart() chromedp.ActionFunc {
 					Value int `json:",string"`
 				}
 
+				// Just checking what this data is, because sometimes I get a 403 error
+				// I try to check if the javascript returns undefined, but right now it gets stuck checking if undefined is returned
 				data, err := items.MarshalJSON()
 				if err != nil {
-					log.Fatal(err)
+					return err
 				}
 
 				var itemsInCart Data
 				err = json.Unmarshal(data, &itemsInCart)
 				if err != nil {
-					log.Fatal(err)
+					return err
 				}
 
 				fmt.Println(itemsInCart.Value)
@@ -291,7 +302,7 @@ func (b *BestBuy) SetSel() chromedp.ActionFunc {
 			AddCartBtn: `div[class="fulfillment-add-to-cart-button"] > div:nth-child(1) > div[style="position:relative"] > .add-to-cart-button.c-button-lg`,
 			CartIcoSel:   `div[data-testid="cart-count"]`,
 			PriceSel: `div[class="pricing-price"] > div > div > div > div > div > div > div > span[aria-hidden="true"]:nth-child(1)`,
-			CheckoutBtn: "`button[class=\"btn btn-lg btn-block btn-primary\"]`",
+			CheckoutBtn: `button[class="btn btn-lg btn-block btn-primary"]`,
 		}
 		return nil
 	}
@@ -309,7 +320,7 @@ func (b *BestBuy) Init() chromedp.ActionFunc {
 	)
 	// Scheduled Notification
 	scheduler = gocron.NewScheduler(time.UTC)
-	_, err := scheduler.Every(10).Seconds().Do(message)
+	_, err := scheduler.Every(1).Minute().Do(message)
 	if err != nil {
 		log.Fatal(err)
 	}
