@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"github.com/D7682/scrape/types"
+	"github.com/D7682/scraper/types"
 	"github.com/chromedp/chromedp"
 	"github.com/manifoldco/promptui"
 	"log"
@@ -11,17 +11,15 @@ import (
 )
 
 func Tasks() chromedp.Tasks {
-	bestbuy := types.BestBuy{
-		Table:  make(types.List),
-		Mutex:  new(sync.RWMutex),
+	bestbuy := types.BestBuy {
+		Table: make(types.List),
+		Mutex: new(sync.RWMutex),
 		Prompt: new(promptui.Select),
+
 	}
 
 	return chromedp.Tasks{
-		bestbuy.Navigate(),
-		bestbuy.GetProductList(),
-		bestbuy.PromptSelection(),
-		bestbuy.Purchase(),
+		bestbuy.Init(),
 		chromedp.Sleep(time.Second * 5),
 	}
 }
@@ -31,7 +29,7 @@ func main() {
 		chromedp.Flag("headless", false),
 		chromedp.Flag("disable-gpu", true),
 		chromedp.Flag("disable-web-security", true),
-		chromedp.Flag("blink-settings", "imagesEnabled=false"),
+		chromedp.Flag("blink-settings", "imagesEnabled=true"),
 		chromedp.UserAgent("Mozilla/5.0 (Windows NT 6.3; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/73.0.3683.103 Safari/537.36"),
 	}...)
 	taskCtx, taskCancel := chromedp.NewContext(AllocCtx)

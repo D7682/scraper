@@ -1,11 +1,15 @@
 package types
 
-import "math"
+import (
+	"github.com/chromedp/chromedp"
+	"math"
+)
 
 type Scraper interface {
-	Navigate()
-	GetProductList()
-	FormatProductList()
+	Navigate() chromedp.ActionFunc
+	GetProductList() chromedp.ActionFunc
+	PromptSelection() chromedp.ActionFunc
+	Purchase() chromedp.ActionFunc
 }
 
 type Item struct {
@@ -22,6 +26,7 @@ func productNameLength(x string) int {
 
 func Init(s Scraper) {
 	s.Navigate()
-	s.FormatProductList()
 	s.GetProductList()
+	s.PromptSelection()
+	s.Purchase()
 }
